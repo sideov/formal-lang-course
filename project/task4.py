@@ -4,13 +4,16 @@ from project.task3 import FiniteAutomaton, intersect_automata, transitive_closur
 
 
 def reachability_with_constraints(
-    fa: FiniteAutomaton, constraints_fa: FiniteAutomaton
+    fa: FiniteAutomaton,
+    constraints_fa: FiniteAutomaton,
+    matrix_class=dok_matrix,
+    matrix_class_id="csr",
 ) -> dict[int, set[int]]:
 
     m, n = constraints_fa.size(), fa.size()
 
     def get_front(s):
-        front = dok_matrix((m, m + n), dtype=bool)
+        front = matrix_class((m, m + n), dtype=bool)
         for i in constraints_fa.start_idxs():
             front[i, i] = True
         for i in range(m):
@@ -18,7 +21,7 @@ def reachability_with_constraints(
         return front
 
     def diag(mat):
-        result = dok_matrix(mat.shape, dtype=bool)
+        result = matrix_class(mat.shape, dtype=bool)
         for i in range(mat.shape[0]):
             for j in range(mat.shape[0]):
                 if mat[j, i]:
@@ -28,7 +31,9 @@ def reachability_with_constraints(
     labels = fa.labels() & constraints_fa.labels()
     result = {s: set() for s in fa.start_states}
     adj = {
-        label: block_diag((constraints_fa.basa[label], fa.basa[label]))
+        label: block_diag(
+            (constraints_fa.basa[label], fa.basa[label]), format=matrix_class_id
+        )
         for label in labels
     }
 
@@ -36,11 +41,30 @@ def reachability_with_constraints(
         front = get_front(v)
         for _ in range(m * n):
             front = sum(
-                [dok_matrix((m, m + n), dtype=bool)]
+                [matrix_class((m, m + n), dtype=bool)]
                 + [diag(front @ adj[label]) for label in labels]
             )
             for i in constraints_fa.final_idxs():
                 for j in fa.final_idxs():
                     if front[i, j + m]:
                         result[v].add(j)
+    return result
+
+
+def reachability_all_pairs(
+    graph_nfa, regex_dfa, matrix_class=dok_matrix, matrix_class_id="csr"
+) -> list[tuple[object, object]]:
+
+    intersection = intersect_automata(
+        graph_nfa, regex_dfa, matrix_class_id=matrix_class_id
+    )
+    closure = transitive_closure(intersection, matrix_class=matrix_class)
+
+    mapping = {v: i for i, v in graph_nfa.states_map.items()}
+    result = list()
+    for u, v in zip(*closure.nonzero()):
+        if u in intersection.start_states and v in intersection.final_states:
+            result.append(
+                (mapping[u // regex_dfa.size()], mapping[v // regex_dfa.size()])
+            )
     return result
