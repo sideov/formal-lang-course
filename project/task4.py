@@ -1,13 +1,14 @@
-from scipy.sparse import dok_matrix, block_diag
+from scipy.sparse import dok_matrix, block_diag, dok_matrix
 
 from project.task3 import FiniteAutomaton, intersect_automata, transitive_closure
+from task3 import paths_ends
 
 
 def reachability_with_constraints(
     fa: FiniteAutomaton,
     constraints_fa: FiniteAutomaton,
     matrix_class=dok_matrix,
-    matrix_class_id="csr",
+    matrix_class_id="dok",
 ) -> dict[int, set[int]]:
 
     m, n = constraints_fa.size(), fa.size()
@@ -52,19 +53,13 @@ def reachability_with_constraints(
 
 
 def reachability_all_pairs(
-    graph_nfa, regex_dfa, matrix_class=dok_matrix, matrix_class_id="csr"
+    graph_fa,
+    regex_fa,
+    start_nodes,
+    final_nodes,
+    matrix_class=dok_matrix,
+    matrix_class_id="dok",
 ) -> list[tuple[object, object]]:
-
-    intersection = intersect_automata(
-        graph_nfa, regex_dfa, matrix_class_id=matrix_class_id
+    return paths_ends(
+        graph_fa, regex_fa, matrix_class=matrix_class, matrix_class_id=matrix_class_id
     )
-    closure = transitive_closure(intersection, matrix_class=matrix_class)
-
-    mapping = {v: i for i, v in graph_nfa.states_map.items()}
-    result = list()
-    for u, v in zip(*closure.nonzero()):
-        if u in intersection.start_states and v in intersection.final_states:
-            result.append(
-                (mapping[u // regex_dfa.size()], mapping[v // regex_dfa.size()])
-            )
-    return result

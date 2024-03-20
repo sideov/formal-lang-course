@@ -3,7 +3,7 @@ from pyformlang.finite_automaton import (
     NondeterministicFiniteAutomaton,
     State,
 )
-from scipy.sparse import dok_matrix, kron, block_diag, csr_matrix
+from scipy.sparse import dok_matrix, kron, block_diag, dok_matrix
 from networkx import MultiDiGraph
 from typing import Iterable, Tuple, Set
 from project.task2 import graph_to_nfa, regex_to_dfa
@@ -38,7 +38,6 @@ class FiniteAutomaton:
 
     def accepts(self, word) -> bool:
         nfa = mat_to_nfa(self)
-        print(word)
         real_word = "".join(list(word))
         return nfa.accepts(real_word)
 
@@ -122,7 +121,7 @@ def transitive_closure(automaton: FiniteAutomaton, matrix_class=dok_matrix):
 
 
 def intersect_automata(
-    automaton1: FiniteAutomaton, automaton2: FiniteAutomaton, matrix_class_id="csr"
+    automaton1: FiniteAutomaton, automaton2: FiniteAutomaton, matrix_class_id="dok"
 ) -> FiniteAutomaton:
     labels = automaton1.basa.keys() & automaton2.basa.keys()
     basa = dict()
@@ -151,21 +150,10 @@ def intersect_automata(
     return FiniteAutomaton(basa, start_states, final_states, states_map)
 
 
-def paths_ends(
-    graph: MultiDiGraph,
-    start_nodes: Set[int],
-    final_nodes: Set[int],
-    regex: str,
-    matrix_class=dok_matrix,
-    matrix_class_id="csr",
-):
-    graph_fa = nfa_to_mat(graph_to_nfa(graph, start_nodes, final_nodes))
-
-    regex_fa = nfa_to_mat(regex_to_dfa(regex))
+def paths_ends(graph_fa, regex_fa, matrix_class=dok_matrix, matrix_class_id="dok"):
 
     intersected_fa = intersect_automata(graph_fa, regex_fa)
-
-    closure = transitive_closure(intersected_fa)
+    closure = transitive_closure(intersected_fa, matrix_class=matrix_class)
 
     paths = []
     map = {v: i for i, v in graph_fa.states_map.items()}
