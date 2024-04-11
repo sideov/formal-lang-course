@@ -3,7 +3,7 @@ from pyformlang.finite_automaton import (
     NondeterministicFiniteAutomaton,
     State,
 )
-from scipy.sparse import dok_matrix, kron, block_diag, csr_matrix
+from scipy.sparse import dok_matrix, kron, block_diag, dok_matrix
 from networkx import MultiDiGraph
 from typing import Iterable, Tuple, Set
 from project.task2 import graph_to_nfa, regex_to_dfa
@@ -12,12 +12,18 @@ from project.task2 import graph_to_nfa, regex_to_dfa
 class FiniteAutomaton:
 
     def __init__(
-        self, obj: any, start_states=set(), final_states=set(), states_map=dict()
+        self,
+        obj: any,
+        start_states=set(),
+        final_states=set(),
+        states_map=dict(),
+        matrix_class=dok_matrix,
     ):
+        self.matrix_class = matrix_class
         if isinstance(obj, DeterministicFiniteAutomaton) or isinstance(
             obj, NondeterministicFiniteAutomaton
         ):
-            mat = nfa_to_mat(obj)
+            mat = nfa_to_mat(obj, matrix_class=matrix_class)
             self.basa, self.start_states, self.final_states, self.states_map = (
                 mat.basa,
                 mat.start_states,
@@ -57,14 +63,16 @@ class FiniteAutomaton:
         return self.states_map[State(u)]
 
 
-def nfa_to_mat(automaton: NondeterministicFiniteAutomaton) -> FiniteAutomaton:
+def nfa_to_mat(
+    automaton: NondeterministicFiniteAutomaton, matrix_class=dok_matrix
+) -> FiniteAutomaton:
     states = automaton.to_dict()
     n = len(automaton.states)
     states_map = {v: i for i, v in enumerate(automaton.states)}
     basa = dict()
 
     for label in automaton.symbols:
-        basa[label] = dok_matrix((n, n), dtype=bool)
+        basa[label] = matrix_class((n, n), dtype=bool)
         for u, edges in states.items():
             if label in edges:
                 e = edges[label]
@@ -100,9 +108,9 @@ def mat_to_nfa(automaton: FiniteAutomaton) -> NondeterministicFiniteAutomaton:
     return nfa
 
 
-def transitive_closure(automaton: FiniteAutomaton):
+def transitive_closure(automaton: FiniteAutomaton, matrix_class=dok_matrix):
     if len(automaton.basa.values()) == 0:
-        return dok_matrix((0, 0), dtype=bool)
+        return matrix_class((0, 0), dtype=bool)
     adj = sum(automaton.basa.values())
     last_ = -1
     while adj.count_nonzero() != last_:
@@ -113,7 +121,7 @@ def transitive_closure(automaton: FiniteAutomaton):
 
 
 def intersect_automata(
-    automaton1: FiniteAutomaton, automaton2: FiniteAutomaton
+    automaton1: FiniteAutomaton, automaton2: FiniteAutomaton, matrix_class_id="dok"
 ) -> FiniteAutomaton:
     labels = automaton1.basa.keys() & automaton2.basa.keys()
     basa = dict()
@@ -122,7 +130,9 @@ def intersect_automata(
     states_map = dict()
 
     for label in labels:
-        basa[label] = kron(automaton1.basa[label], automaton2.basa[label], "csr")
+        basa[label] = kron(
+            automaton1.basa[label], automaton2.basa[label], matrix_class_id
+        )
 
     for u, i in automaton1.states_map.items():
         for v, j in automaton2.states_map.items():
@@ -140,16 +150,10 @@ def intersect_automata(
     return FiniteAutomaton(basa, start_states, final_states, states_map)
 
 
-def paths_ends(
-    graph: MultiDiGraph, start_nodes: Set[int], final_nodes: Set[int], regex: str
-):
-    graph_fa = nfa_to_mat(graph_to_nfa(graph, start_nodes, final_nodes))
-
-    regex_fa = nfa_to_mat(regex_to_dfa(regex))
+def paths_ends(graph_fa, regex_fa, matrix_class=dok_matrix, matrix_class_id="dok"):
 
     intersected_fa = intersect_automata(graph_fa, regex_fa)
-
-    closure = transitive_closure(intersected_fa)
+    closure = transitive_closure(intersected_fa, matrix_class=matrix_class)
 
     paths = []
     map = {v: i for i, v in graph_fa.states_map.items()}
