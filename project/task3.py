@@ -53,10 +53,17 @@ class FiniteAutomaton:
         return nfa.accepts(real_word)
 
     def is_empty(self) -> bool:
-        if isinstance(self.basa, dict):
-            return len(self.basa) == 0
-        else:
-            return self.basa.shape[0] == 0
+        closure = transitive_closure(self)
+        for ss in self.start_states:
+            for tt in self.final_states:
+                ss_index = self.states_map[ss]
+                tt_index = self.states_map[tt]
+                try:
+                    if closure[ss_index, tt_index]:
+                        return False
+                except:
+                    pass
+        return True
 
     def final_idxs(self):
         return [self.mapOverState_(t) for t in self.final_states]
@@ -174,13 +181,20 @@ def intersect_automata(
 def paths_ends(
     graph: MultiDiGraph, start_nodes: set[int], final_nodes: set[int], regex: str
 ) -> list[tuple[object, object]]:
+    res = list()
     graph_nfa = nfa_to_mat(graph_to_nfa(graph, start_nodes, final_nodes))
+    states_map = {v: i for i, v in graph_nfa.states_map.items()}
     regex_dfa = nfa_to_mat(regex_to_dfa(regex))
     intersection = intersect_automata(graph_nfa, regex_dfa, g=False)
-    closure = transitive_closure(intersection)
+    si = intersection.start_states
+    ti = intersection.final_states
 
-    states_map = {v: i for i, v in graph_nfa.states_map.items()}
-    res = list()
+    for s in si:
+        for t in ti:
+            if si in start_nodes and ti in final_nodes:
+                res.append((states_map[s], states_map[t]))
+
+    closure = transitive_closure(intersection)
     for u, v in zip(*closure.nonzero()):
         if u in intersection.start_states and v in intersection.final_states:
             res.append(
