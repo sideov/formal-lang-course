@@ -79,6 +79,9 @@ def cfpq_with_tensor(
     final_nodes: set[int] = None,
 ) -> set[tuple[int, int]]:
 
+    if isinstance(rsm, CFG):
+        rsm = cfg_to_rsm(rsm)
+
     graph_matrix = task3.nfa_to_mat(graph_to_nfa(graph, start_nodes, final_nodes))
     mat = task3.rsm_to_mat(rsm)
     graph_matrix_inds = graph_matrix.indexes_dict()
