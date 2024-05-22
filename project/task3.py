@@ -6,7 +6,7 @@ from pyformlang.finite_automaton import (
 from scipy.sparse import dok_matrix, kron, block_diag, csr_matrix
 from networkx import MultiDiGraph
 from typing import Iterable, Tuple, Set
-from project.task2 import graph_to_nfa, regex_to_dfa
+from task2 import graph_to_nfa, regex_to_dfa
 from scipy.sparse import dok_matrix, csr_matrix
 import pyformlang
 from pyformlang.cfg import Epsilon
@@ -178,9 +178,7 @@ def intersect_automata(
     return FiniteAutomaton(basa, start_states, final_states, states_map)
 
 
-def paths_ends(
-    graph: MultiDiGraph, start_nodes: set[int], final_nodes: set[int], regex: str
-) -> list[tuple[object, object]]:
+def paths_ends(graph, start_nodes, final_nodes, regex):
     res = list()
     graph_nfa = nfa_to_mat(graph_to_nfa(graph, start_nodes, final_nodes))
     states_map = {v: i for i, v in graph_nfa.states_map.items()}

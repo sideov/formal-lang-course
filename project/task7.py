@@ -3,7 +3,7 @@ import pyformlang
 import networkx as nx
 from typing import *
 from scipy.sparse import dok_matrix
-from project.task6 import cfg_to_weak_normal_form
+from task6 import cfg_to_weak_normal_form
 
 
 def cfpq_with_matrix(
