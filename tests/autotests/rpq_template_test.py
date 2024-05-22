@@ -30,7 +30,15 @@ def rpq_cfpq_test(
                 FiniteAutomaton(regex_to_dfa(regex_str)),
             )
         )
-        assert cfpq == rpq
+        if cfpq == rpq:
+            assert True
+        else:
+            print(graph.edges(data=True))
+            print(regex_str)
+            print(start_nodes, final_nodes)
+            print(cfpq)
+            print(rpq)
+            assert False
 
 
 def different_grammars_test(
