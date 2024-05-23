@@ -5,12 +5,8 @@ from pyformlang.finite_automaton import (
 )
 from scipy.sparse import dok_matrix, kron, block_diag, csr_matrix
 from networkx import MultiDiGraph
-from typing import Iterable, Tuple, Set
 from project.task2 import graph_to_nfa, regex_to_dfa
 from scipy.sparse import dok_matrix, csr_matrix, lil_matrix, csc_matrix
-import pyformlang
-from pyformlang.cfg import Epsilon
-import pyformlang.rsa
 
 
 def matrix_class_mapper(matrix_class):
