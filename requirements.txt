@@ -3,7 +3,7 @@ antlr4-tools
 black
 cfpq-data==4.0.3
 grammarinator @ git+https://github.com/renatahodovan/grammarinator.git@f3ffa71
-networkx==2.6.3
+networkx==3.2.1
 pre-commit
 pydot
 pyformlang
