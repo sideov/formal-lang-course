@@ -7,10 +7,23 @@ from scipy.sparse import dok_matrix, kron, block_diag, csr_matrix
 from networkx import MultiDiGraph
 from typing import Iterable, Tuple, Set
 from project.task2 import graph_to_nfa, regex_to_dfa
-from scipy.sparse import dok_matrix, csr_matrix
+from scipy.sparse import dok_matrix, csr_matrix, lil_matrix, csc_matrix
 import pyformlang
 from pyformlang.cfg import Epsilon
 import pyformlang.rsa
+
+
+def matrix_class_mapper(matrix_class):
+    if matrix_class == dok_matrix:
+        return "dok"
+    elif matrix_class == csr_matrix:
+        return "csr"
+    elif matrix_class == lil_matrix:
+        return "lil"
+    elif matrix_class == csc_matrix:
+        return "csc"
+    else:
+        raise TypeError("bad matrix class")
 
 
 class FiniteAutomaton:
@@ -105,7 +118,11 @@ def nfa_to_mat(
                     basa[label][states_map[u], states_map[v]] = True
 
     res = FiniteAutomaton(
-        basa, automaton.start_states, automaton.final_states, states_map
+        basa,
+        automaton.start_states,
+        automaton.final_states,
+        states_map,
+        matrix_class=matrix_class,
     )
     res.number_of_states = len(automaton.states)
     return res
@@ -133,9 +150,9 @@ def mat_to_nfa(automaton: FiniteAutomaton) -> NondeterministicFiniteAutomaton:
     return nfa
 
 
-def transitive_closure(automaton: FiniteAutomaton):
+def transitive_closure(automaton: FiniteAutomaton, matrix_class=dok_matrix):
     if len(automaton.basa.values()) == 0:
-        return dok_matrix((0, 0), dtype=bool)
+        return matrix_class((0, 0), dtype=bool)
     adj = sum(automaton.basa.values())
     last_ = -1
     while adj.count_nonzero() != last_:
@@ -148,7 +165,7 @@ def transitive_closure(automaton: FiniteAutomaton):
 def intersect_automata(
     automaton1: FiniteAutomaton,
     automaton2: FiniteAutomaton,
-    matrix_class_id="csr",
+    matrix_class=dok_matrix,
     g=True,
 ) -> FiniteAutomaton:
     automaton1.flag = not g
@@ -161,7 +178,9 @@ def intersect_automata(
 
     for label in labels:
         basa[label] = kron(
-            automaton1.basa[label], automaton2.basa[label], matrix_class_id
+            automaton1.basa[label],
+            automaton2.basa[label],
+            matrix_class_mapper(matrix_class),
         )
 
     for u, i in automaton1.states_map.items():
@@ -175,19 +194,28 @@ def intersect_automata(
             if u in automaton1.final_states and v in automaton2.final_states:
                 final_states.add(State(k))
 
-    return FiniteAutomaton(basa, start_states, final_states, states_map)
+    return FiniteAutomaton(
+        basa, start_states, final_states, states_map, matrix_class=matrix_class
+    )
 
 
 def paths_ends(
-    graph: MultiDiGraph, start_nodes: set[int], final_nodes: set[int], regex: str
+    graph: MultiDiGraph,
+    start_nodes: set[int],
+    final_nodes: set[int],
+    regex: str,
+    matrix_class=dok_matrix,
 ) -> list[tuple[object, object]]:
     res = list()
-    graph_nfa = nfa_to_mat(graph_to_nfa(graph, start_nodes, final_nodes))
-    states_map = {v: i for i, v in graph_nfa.states_map.items()}
-    regex_dfa = nfa_to_mat(regex_to_dfa(regex))
-    intersection = intersect_automata(graph_nfa, regex_dfa, g=False)
+    graph_nfa = nfa_to_mat(
+        graph_to_nfa(graph, start_nodes, final_nodes), matrix_class=matrix_class
+    )
+    regex_dfa = nfa_to_mat(regex_to_dfa(regex), matrix_class=matrix_class)
+    intersection = intersect_automata(
+        graph_nfa, regex_dfa, g=False, matrix_class=matrix_class
+    )
 
-    closure = transitive_closure(intersection)
+    closure = transitive_closure(intersection, matrix_class=matrix_class)
     translate = {v: i for i, v in graph_nfa.states_map.items()}
     for u, v in zip(*closure.nonzero()):
         if u in intersection.start_states and v in intersection.final_states:
@@ -195,48 +223,3 @@ def paths_ends(
                 (translate[u // regex_dfa.size()], translate[v // regex_dfa.size()])
             )
     return list(set(res))
-
-
-def rsm_to_mat(rsm: pyformlang.rsa.RecursiveAutomaton) -> FiniteAutomaton:
-    states = set()
-    start_states = set()
-    final_states = set()
-    null_symb = set()
-
-    for v, a in rsm.boxes.items():
-        for state in a.dfa.states:
-            s = State((v, state.value))
-            states.add(s)
-            if state in a.dfa.start_states:
-                start_states.add(s)
-            if state in a.dfa.final_states:
-                final_states.add(s)
-
-    ls = len(states)
-    states_map = {}
-    for i, v in enumerate(sorted(states, key=lambda x: x.value[1])):
-        states_map[v] = i
-
-    m = dict()
-    for var, p in rsm.boxes.items():
-        for src, transition in p.dfa.to_dict().items():
-            for symbol, dst in transition.items():
-                label = symbol.value
-                if symbol not in m:
-                    m[label] = dok_matrix((ls, ls), dtype=bool)
-
-                dst = {dst} if not isinstance(dst, set) else dst
-                for target in dst:
-                    sts_src = states_map[State((var, src.value))]
-                    sts_target = states_map[State((var, target.value))]
-                    m[label][
-                        sts_src,
-                        sts_target,
-                    ] = True
-                if isinstance(dst, Epsilon):
-                    null_symb.add(label)
-
-    res = FiniteAutomaton(m, start_states, final_states, states_map)
-    res.null_symb = null_symb
-    res.number_of_states = ls
-    return res
