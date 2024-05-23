@@ -74,6 +74,8 @@ def program(generator, request) -> str:
 class TestParser:
     def test_id(self, program: str):
         tree_before, is_valid = prog_to_tree(program)
+        if not is_valid:
+            print(program)
         assert is_valid
         program_after = tree_to_prog(tree_before)
         tree_after, is_valid_after = prog_to_tree(program_after)
