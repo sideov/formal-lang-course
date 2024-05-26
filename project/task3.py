@@ -38,7 +38,7 @@ class FiniteAutomaton:
         start_states=set(),
         final_states=set(),
         states_map=dict(),
-        matrix_class=dok_matrix,
+        matrix_class=lil_matrix,
     ):
         if isinstance(obj, DeterministicFiniteAutomaton) or isinstance(
             obj, NondeterministicFiniteAutomaton
@@ -94,7 +94,7 @@ class FiniteAutomaton:
 
 
 def nfa_to_mat(
-    automaton: NondeterministicFiniteAutomaton, matrix_class=dok_matrix
+    automaton: NondeterministicFiniteAutomaton, matrix_class=lil_matrix
 ) -> FiniteAutomaton:
     states = automaton.to_dict()
     n = len(automaton.states)
@@ -146,7 +146,7 @@ def mat_to_nfa(automaton: FiniteAutomaton) -> NondeterministicFiniteAutomaton:
     return nfa
 
 
-def transitive_closure(automaton: FiniteAutomaton, matrix_class=dok_matrix):
+def transitive_closure(automaton: FiniteAutomaton, matrix_class=lil_matrix):
     if len(automaton.basa.values()) == 0:
         return matrix_class((0, 0), dtype=bool)
     adj = sum(automaton.basa.values())
@@ -161,7 +161,7 @@ def transitive_closure(automaton: FiniteAutomaton, matrix_class=dok_matrix):
 def intersect_automata(
     automaton1: FiniteAutomaton,
     automaton2: FiniteAutomaton,
-    matrix_class=dok_matrix,
+    matrix_class=lil_matrix,
     g=True,
 ) -> FiniteAutomaton:
     automaton1.flag = not g
@@ -200,7 +200,7 @@ def paths_ends(
     start_nodes: set[int],
     final_nodes: set[int],
     regex: str,
-    matrix_class=dok_matrix,
+    matrix_class=lil_matrix,
 ) -> list[tuple[object, object]]:
     res = list()
     graph_nfa = nfa_to_mat(
