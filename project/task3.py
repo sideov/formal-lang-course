@@ -186,21 +186,15 @@ def paths_ends(
     states_map = {v: i for i, v in graph_nfa.states_map.items()}
     regex_dfa = nfa_to_mat(regex_to_dfa(regex))
     intersection = intersect_automata(graph_nfa, regex_dfa, g=False)
-    si = intersection.start_states
-    ti = intersection.final_states
-
-    for s in si:
-        for t in ti:
-            if si in start_nodes and ti in final_nodes:
-                res.append((states_map[s], states_map[t]))
 
     closure = transitive_closure(intersection)
+    translate = {v: i for i, v in graph_nfa.states_map.items()}
     for u, v in zip(*closure.nonzero()):
         if u in intersection.start_states and v in intersection.final_states:
             res.append(
-                (states_map[u // regex_dfa.size()], states_map[v // regex_dfa.size()])
+                (translate[u // regex_dfa.size()], translate[v // regex_dfa.size()])
             )
-    return res
+    return list(set(res))
 
 
 def rsm_to_mat(rsm: pyformlang.rsa.RecursiveAutomaton) -> FiniteAutomaton:
