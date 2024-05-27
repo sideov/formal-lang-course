@@ -1,7 +1,7 @@
 antlr4-python3-runtime
 antlr4-tools
 black
-cfpq-data==4.0.3
+cfpq-data
 grammarinator @ git+https://github.com/renatahodovan/grammarinator.git@f3ffa71
 networkx==3.2.1
 pre-commit
