@@ -1,8 +1,8 @@
 grammar language;
 
-VAR: [a-z] [a-z0-9]*;
+VAR: [a-z] [a-z_"0-9]*;
 NUM: '0' | ([1-9][0-9]*);
-CHAR: '""' [a-z] '""';
+CHAR: '\u0022' [a-z] '\u0022';
 
 prog: stmt*;
 
