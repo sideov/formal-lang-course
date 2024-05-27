@@ -24,6 +24,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Seet up Java
+        run: |
+          antlr4 -Dlanguage=Python3 project/language.g4 -visitor -o project/lang
+
+
       - name: Test with pytest
         run: |
           pip install pytest

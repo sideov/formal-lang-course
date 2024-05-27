@@ -1,7 +1,7 @@
-from project.lang.languageLexer import languageLexer
-from project.lang.languageParser import languageParser
-from project.lang.languageVisitor import languageVisitor
-from project.lang.languageListener import languageListener
+from project.lang.project.languageLexer import languageLexer
+from project.lang.project.languageParser import languageParser
+from project.lang.project.languageVisitor import languageVisitor
+from project.lang.project.languageListener import languageListener
 
 from antlr4 import *
 from antlr4.InputStream import InputStream
