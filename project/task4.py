@@ -1,6 +1,6 @@
 from scipy.sparse import dok_matrix, block_diag
 
-from project.task3 import FiniteAutomaton
+from task3 import FiniteAutomaton
 
 
 def reachability_with_constraints(

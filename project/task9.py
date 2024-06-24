@@ -1,6 +1,6 @@
 from networkx import DiGraph
 
-from project.task8 import cfg_to_rsm
+from task8 import cfg_to_rsm
 
 from pyformlang.rsa import RecursiveAutomaton
 from pyformlang.cfg import CFG
@@ -17,9 +17,9 @@ import pyformlang
 def cfpq_with_gll(
     rsm: RecursiveAutomaton,
     graph: nx.DiGraph,
-    start_nodes: set[int] = None,
-    final_nodes: set[int] = None,
-) -> set[tuple[int, int]]:
+    start_nodes: Set[int] = None,
+    final_nodes: Set[int] = None,
+) -> Set[Tuple[int, int]]:
     if isinstance(rsm, CFG):
         rsm = cfg_to_rsm(rsm)
 

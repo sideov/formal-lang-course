@@ -1,7 +1,7 @@
 from pyformlang.finite_automaton import Symbol
-from project import task2
+import task2
 from pyformlang.cfg import CFG, Variable, Terminal, Epsilon
-from typing import Tuple
+from typing import Tuple, Set
 from scipy.sparse import dok_matrix, csr_matrix
 import pyformlang
 from pyformlang import *
@@ -10,8 +10,8 @@ from pyformlang.regular_expression import Regex
 from networkx import DiGraph
 from pyformlang.finite_automaton.finite_automaton import to_symbol
 import networkx as nx
-from project import task3
-from project.task2 import graph_to_nfa, regex_to_dfa
+import task3
+from task2 import graph_to_nfa, regex_to_dfa
 from pyformlang.rsa.box import Box
 from pyformlang.rsa import RecursiveAutomaton
 
@@ -75,9 +75,9 @@ def ebnf_to_rsm(ebnf: str) -> pyformlang.rsa.RecursiveAutomaton:
 def cfpq_with_tensor(
     rsm: pyformlang.rsa.RecursiveAutomaton,
     graph: DiGraph,
-    start_nodes: set[int] = None,
-    final_nodes: set[int] = None,
-) -> set[tuple[int, int]]:
+    start_nodes: Set[int] = None,
+    final_nodes: Set[int] = None,
+) -> Set[Tuple[int, int]]:
 
     if isinstance(rsm, CFG):
         rsm = cfg_to_rsm(rsm)
